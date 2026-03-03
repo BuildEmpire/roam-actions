@@ -3,12 +3,17 @@ import core from "@actions/core";
 try {
   const apiKey = core.getInput("api-key");
   const chatId = core.getInput("chat-id");
-  const text = core.getInput("text");
+  const color = core.getInput("colour");
+  const blocksInput = core.getInput("blocks");
+
+  const blocks = JSON.parse(blocksInput);
 
   const body = JSON.stringify({
-    chat: chatId,
-    text,
-  });
+      chat: chatId,
+      color,
+      blocks
+    });
+
   const response = await fetch("https://api.ro.am/v0/chat.post", {
     method: "POST",
     headers: {
@@ -17,12 +22,18 @@ try {
     },
     body,
   });
+
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    const errorBody = await response.text();
+    core.error(`API request failed`);
+    core.error(`Status: ${response.status} ${response.statusText}`);
+    core.error(`Response body: ${errorBody}`);
+    throw new Error(`HTTP ${response.status}`);
   }
 
   const responseData = await response.json();
   console.log("Response:", responseData);
+
 } catch (error) {
   core.setFailed(error.message);
 }
